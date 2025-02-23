@@ -1,0 +1,42 @@
+CREATE TABLE tb_varejoFat (
+id_pedido				VARCHAR(250),
+data					DATE,
+loja					VARCHAR(250),
+cidade				VARCHAR(250),
+estado				VARCHAR(250),
+regiao				VARCHAR(250),
+tamanho				VARCHAR(250),
+local_consumo			VARCHAR(250),
+preco					INT,
+forma_pagamento		VARCHAR(250),
+ano_mes				VARCHAR(250)
+)
+BULK INSERT tb_varejoFat
+FROM 'caminho\arquivo.csv'
+WITH(
+  FIELDTERMINATOR = ';',
+  ROWTERMINATOR = '\n',
+  FIRSTROW = 2
+)
+
+SELECT 
+    id_pedido,
+	data,
+	loja,
+	cidade,
+	estado,
+	regiao,
+	tamanho,
+	CASE
+		WHEN UPPER(local_consumo) LIKE '%LOCAL%' THEN 'No Local' else 'Delivery'
+	END Local_consumo,
+	preco,
+	forma_pagamento,
+	ano_mes,
+    CASE 
+        WHEN DATA IN (SELECT MAX(DATA) FROM tb_varejoFat GROUP BY YEAR(DATA), MONTH(DATA)) THEN 1 ELSE 0 
+    END AS DATAS_COMPARADAS,
+    CASE
+        WHEN DATA > DATEADD(MONTH, -13, (SELECT MAX(DATA) FROM tb_varejoFat)) AND DATA <= (SELECT MAX(DATA) FROM tb_varejoFat) THEN 1 ELSE 0
+    END AS TrezeMeses
+FROM tb_varejoFat
